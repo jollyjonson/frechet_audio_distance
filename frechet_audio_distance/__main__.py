@@ -1,4 +1,4 @@
-"""Entry point for project_name."""
+"""Entry point for frechet_audio_distance."""
 
 from .cli import main  # pragma: no cover
 
