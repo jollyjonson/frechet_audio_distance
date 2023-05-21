@@ -67,11 +67,11 @@ release:          ## Create a new tag for release.
 	@git push -u origin HEAD --tags
 	@echo "Github Actions will detect the new tag and release the new version."
 
-.PHONY: docs
-docs:             ## Build the documentation.
-	@echo "building documentation ..."
-	@$(ENV_PREFIX)mkdocs build
-	URL="site/index.html"; xdg-open $$URL || sensible-browser $$URL || x-www-browser $$URL || gnome-open $$URL
+#.PHONY: docs
+#docs:             ## Build the documentation.
+#	@echo "building documentation ..."
+#	@$(ENV_PREFIX)mkdocs build
+#	URL="site/index.html"; xdg-open $$URL || sensible-browser $$URL || x-www-browser $$URL || gnome-open $$URL
 
 #.PHONY: switch-to-poetry
 #switch-to-poetry: ## Switch to poetry package manager.
