@@ -1,5 +1,3 @@
 include LICENSE
-include HISTORY.md
-include Containerfile
 graft tests
 graft frechet_audio_distance
