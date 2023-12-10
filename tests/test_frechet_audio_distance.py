@@ -227,16 +227,14 @@ class FrechetAudioDistanceTests(unittest.TestCase):
             np.allclose(actual_embeddings, EXPECTED_EMBEDDING, atol=1e-6)
         )
 
-    def test_fad_regression_test(self):
+    def test_another_fad_regression_test(self):
         sample_rate = 16000
         test_signals = self._generate_test_signals(sample_rate)
         fad = FrechetAudioDistance(sample_rate)
         fad.update_state(test_signals, test_signals + 0.1)
         fad_value = fad.result().numpy()
-        diff, tolerance = (
-            np.abs(fad_value - REGRESSION_TEST_EXPECTED_VALUE),
-            2e-3,
-        )
+        diff = np.abs(fad_value - REGRESSION_TEST_EXPECTED_VALUE)
+        tolerance = 2e-3
         self.assertLess(diff, tolerance)
 
     def test_attempting_to_merge_states_raises(self):
