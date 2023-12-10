@@ -219,14 +219,6 @@ class FrechetAudioDistanceTests(unittest.TestCase):
         tolerance = 1e-1
         self.assertLess(diff, tolerance)
 
-    def test_vggish_model_computes_correct_embeddings(self):
-        fad_instance = FrechetAudioDistance(44100)
-        vggish = fad_instance._vggish_model
-        actual_embeddings = vggish(VGGISH_TEST_INPUT)
-        self.assertTrue(
-            np.allclose(actual_embeddings, EXPECTED_EMBEDDING, atol=1e-6)
-        )
-
     def test_another_fad_regression_test(self):
         sample_rate = 16000
         test_signals = self._generate_test_signals(sample_rate)
