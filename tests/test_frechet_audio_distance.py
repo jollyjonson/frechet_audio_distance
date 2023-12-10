@@ -8,11 +8,7 @@ from frechet_audio_distance import (
     FrechetAudioDistance,
     RunFrechetAudioDistanceOnlyOnValidationAndTestCallback,
 )
-from tests.test_signals import (
-    VGGISH_TEST_INPUT,
-    EXPECTED_EMBEDDING,
-    REGRESSION_TEST_EXPECTED_VALUE,
-)
+from tests.test_signals import REGRESSION_TEST_EXPECTED_VALUE
 
 
 FAD_REGRESSION_TEST_EXPECTED_RESULT = 32.92703601606229
