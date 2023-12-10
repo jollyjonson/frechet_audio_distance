@@ -20,7 +20,7 @@ class VGGishTests(unittest.TestCase):
 
     @staticmethod
     def _generate_1s_1khz_test_signal() -> tf.Tensor:
-        test_signal_len_in_s = 9.
+        test_signal_len_in_s = 1.
         time = (np.arange(0, test_signal_len_in_s * VGGish.sample_rate_in_hz)
                 / VGGish.sample_rate_in_hz)
         test_signal_1khz = np.sin(2. * np.pi * 1000. * time)
