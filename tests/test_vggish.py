@@ -23,7 +23,8 @@ class VGGishTests(unittest.TestCase):
         test_signal_len_in_s = 1.
         time = (np.arange(0, test_signal_len_in_s * VGGish.sample_rate_in_hz)
                 / VGGish.sample_rate_in_hz)
-        test_signal_1khz = np.sin(2. * np.pi * 1000. * time)
+        test_signal_freq_in_hz = 1000.
+        test_signal_1khz = np.sin(2. * np.pi * test_signal_freq_in_hz * time)
         test_signal_1khz_with_batch_dim = np.expand_dims(test_signal_1khz, 0)
         return tf.convert_to_tensor(test_signal_1khz_with_batch_dim,
                                     dtype=tf.float32)
