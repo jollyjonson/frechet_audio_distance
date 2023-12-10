@@ -24,8 +24,8 @@ fmt:              ## Format code using black & isort.
 .PHONY: lint
 lint:             ## Run pep8, black, mypy linters.
 	$(ENV_PREFIX)flake8 frechet_audio_distance/
-	$(ENV_PREFIX)black -l 79 --check frechet_audio_distance/
-	$(ENV_PREFIX)black -l 79 --check tests/
+	$(ENV_PREFIX)black -l 80 --check frechet_audio_distance/
+	$(ENV_PREFIX)black -l 80 --check tests/
 	$(ENV_PREFIX)mypy --ignore-missing-imports frechet_audio_distance/
 
 .PHONY: test
