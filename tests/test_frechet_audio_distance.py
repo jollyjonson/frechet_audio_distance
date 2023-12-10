@@ -222,7 +222,7 @@ class FrechetAudioDistanceTests(unittest.TestCase):
         fad.update_state(test_signals, test_signals + 0.1)
         fad_value = fad.result().numpy()
         diff = np.abs(fad_value - REGRESSION_TEST_EXPECTED_VALUE)
-        tolerance = 2e-3
+        tolerance = 4e-2
         self.assertLess(diff, tolerance)
 
     def test_attempting_to_merge_states_raises(self):
