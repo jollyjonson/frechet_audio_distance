@@ -1,7 +1,5 @@
-import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional
 
-import numpy as np
 import tensorflow as tf
 import tensorflow_io as tfio
 
@@ -90,8 +88,8 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
         self,
         sample_rate: float,
         downmix_to_mono: bool = False,
-        step_size_in_s: float = 0.5,
         name: Optional[str] = None,
+        feature: FADFeature = VGGish(),
         **kwargs: Dict[Any, Any]
     ):
         super().__init__(
@@ -100,10 +98,7 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
 
         self._sample_rate = sample_rate
         self._downmix_to_mono = downmix_to_mono
-        self._step_size_in_samples = int(
-            round(step_size_in_s * self.internal_sample_rate_in_hz)
-        )
-        self._vggish_model: tf.keras.Model = self._init_vggish_model()
+        self._feature = feature
 
         self.reset_state()
 
@@ -112,7 +107,11 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
         self.switch = tf.Variable(True)
 
     def update_state(
-        self, y_true: tf.Tensor, y_pred: tf.Tensor, *args, **kwargs
+        self,
+        y_true: tf.Tensor | None,
+        y_pred: tf.Tensor | None,
+        *args,
+        **kwargs
     ) -> None:  # pragma: no cover
         if self.switch:
             y_true, y_pred = map(
@@ -126,11 +125,8 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
                 self._possibly_add_batch_dim_and_reduce_channel_dim,
                 [y_true, y_pred],
             )
-            y_true_features, y_pred_features = map(
-                self._extract_mel_features, [y_true, y_pred]
-            )
             y_true_embedding, y_pred_embedding = map(
-                self._vggish_model, [y_true_features, y_pred_features]
+                self._feature, [y_true, y_pred]
             )
             for data, statistics in zip(
                 [y_true_embedding, y_pred_embedding],
@@ -148,87 +144,6 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
     def merge_state(self, *args, **kwargs):
         raise NotImplementedError(
             "Merging states for distributed operation is not yet implemented"
-        )
-
-    def _extract_mel_features(self, audio_batch: tf.Tensor) -> tf.Tensor:
-        normalized_audio_batch = self._normalize_audio(audio_batch)
-        framed_audio = tf.signal.frame(
-            normalized_audio_batch,
-            VGGish.sample_rate_in_hz,
-            self._step_size_in_samples,
-        )
-        batched_framed_audio = tf.reshape(
-            framed_audio,
-            (
-                tf.shape(framed_audio)[0] * tf.shape(framed_audio)[1],
-                tf.shape(framed_audio)[2],
-            ),
-        )
-        return tf.map_fn(self._log_mel_spectrogram, batched_framed_audio)
-
-    @staticmethod
-    def _normalize_audio(audio_batch: tf.Tensor) -> tf.Tensor:
-        min_ratio_for_normalization = tf.convert_to_tensor(
-            0.1, dtype=audio_batch.dtype
-        )  # = 10**(max_db/-20) with max_db = 20
-        normalization_coeff = tf.maximum(
-            min_ratio_for_normalization,
-            tf.reduce_max(audio_batch, axis=-1, keepdims=True),
-        )
-        return audio_batch / normalization_coeff
-
-    @staticmethod
-    def _stabilized_log(
-        x: tf.Tensor, additive_offset: float, floor: float
-    ) -> tf.Tensor:  # pragma: no cover
-        """TF version of mfcc_mel.StabilizedLog."""
-        return tf.math.log(tf.math.maximum(x, floor) + additive_offset)
-
-    # spectrogram params as given by FAD paper
-    _num_mel_bins = 64
-    _log_additive_offset = 1e-3
-    _log_floor = 1e-12
-    _window_length_secs = 0.025
-    _hop_length_secs = 1e-2
-    _window_length_samples = int(
-        round(internal_sample_rate_in_hz * _window_length_secs)
-    )
-    _hop_length_samples = int(
-        round(internal_sample_rate_in_hz * _hop_length_secs)
-    )
-    _fft_length = 2 ** int(
-        np.ceil(np.log(_window_length_samples) / np.log(2.0))
-    )
-
-    # spectrogram to mel transform operator
-    _spec_to_mel_mat = tf.signal.linear_to_mel_weight_matrix(
-        num_mel_bins=_num_mel_bins,
-        num_spectrogram_bins=_fft_length // 2 + 1,
-        sample_rate=internal_sample_rate_in_hz,
-        lower_edge_hertz=VGGish.mel_min_hz,
-        upper_edge_hertz=VGGish.mel_max_hz,
-        dtype=tf.dtypes.float32,
-    )
-
-    @classmethod
-    def _log_mel_spectrogram(
-        cls, audio: tf.Tensor
-    ) -> tf.Tensor:  # pragma: no cover
-        """TF version of mfcc_mel.LogMelSpectrogram."""
-        spectrogram = tf.abs(
-            tf.signal.stft(
-                tf.cast(audio, tf.dtypes.float32),
-                frame_length=cls._window_length_samples,
-                frame_step=cls._hop_length_samples,
-                fft_length=cls._fft_length,
-                window_fn=tf.signal.hann_window,
-            )
-        )
-        # somehow the shapes don't really work by default,
-        # therefore we throw away two frames here, shouldn't matter
-        mel = tf.matmul(spectrogram, cls._spec_to_mel_mat)[1:-1]
-        return cls._stabilized_log(
-            mel, cls._log_additive_offset, cls._log_floor
         )
 
     def _possibly_add_batch_dim_and_reduce_channel_dim(
@@ -310,77 +225,6 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
             + tf.linalg.trace(self._pred_statistics.covariance)
             - 2.0 * trace_sqrt_product
         )
-
-    _vggish_model_checkpoint_url: str = (
-        "https://storage.googleapis.com/tfhub-modules/google/vggish/1.tar.gz"
-    )
-
-    @classmethod
-    def _init_vggish_model(cls) -> tf.keras.Model:
-        model_path = os.path.dirname(
-            tf.keras.utils.get_file(
-                "vggish_model.tar.gz",
-                cls._vggish_model_checkpoint_url,
-                extract=True,
-                cache_subdir="vggish",
-            )
-        )
-        return cls._assign_weights_to_model(
-            cls._load_vggish_weights(model_path),
-            cls._build_vggish_as_keras_model(),
-        )
-
-    @staticmethod
-    def _load_vggish_weights(saved_model_path: str) -> List[tf.Variable]:
-        weights = []
-        loaded_obj = tf.saved_model.load(saved_model_path)
-        for weight_name_in_orig_model in VGGish.var_names:
-            # only way I got this SOMEHOW to work at all... might break.
-            for weight_var in loaded_obj._variables:
-                if weight_var.name == weight_name_in_orig_model:
-                    weights.append(weight_var)
-        return weights
-
-    @staticmethod
-    def _assign_weights_to_model(
-        weights: List[tf.Variable], keras_model: tf.keras.Model
-    ) -> tf.keras.Model:
-        for layer in keras_model.layers:
-            for w in layer.trainable_weights:
-                w.assign(weights.pop(0))
-        assert len(weights) == 0
-        return keras_model
-
-    @staticmethod
-    def _build_vggish_as_keras_model():
-        conv_layer_kwargs = {
-            "kernel_size": (3, 3),
-            "strides": (1, 1),
-            "padding": "SAME",
-            "activation": "relu",
-        }
-        pool_layer_kwargs = {"strides": (2, 2), "padding": "SAME"}
-
-        input = tf.keras.layers.Input(
-            shape=(VGGish.num_frames, VGGish.num_mel_bins)
-        )
-        x = tf.reshape(input, [-1, VGGish.num_frames, VGGish.num_mel_bins, 1])
-        x = tf.keras.layers.Conv2D(64, **conv_layer_kwargs)(x)
-        x = tf.keras.layers.MaxPool2D(**pool_layer_kwargs)(x)
-        x = tf.keras.layers.Conv2D(128, **conv_layer_kwargs)(x)
-        x = tf.keras.layers.MaxPool2D(**pool_layer_kwargs)(x)
-        x = tf.keras.layers.Conv2D(256, **conv_layer_kwargs)(x)
-        x = tf.keras.layers.Conv2D(256, **conv_layer_kwargs)(x)
-        x = tf.keras.layers.MaxPool2D(**pool_layer_kwargs)(x)
-        x = tf.keras.layers.Conv2D(512, **conv_layer_kwargs)(x)
-        x = tf.keras.layers.Conv2D(512, **conv_layer_kwargs)(x)
-        x = tf.keras.layers.MaxPool2D(**pool_layer_kwargs)(x)
-        x = tf.keras.layers.Flatten()(x)
-        x = tf.keras.layers.Dense(4096, activation="relu")(x)
-        x = tf.keras.layers.Dense(4096, activation="relu")(x)
-        x = tf.keras.layers.Dense(VGGish.embedding_size, activation=None)(x)
-        embedding = tf.identity(x, name="embedding")
-        return tf.keras.Model(inputs=[input], outputs=[embedding])
 
 
 class RunFrechetAudioDistanceOnlyOnValidationAndTestCallback(
