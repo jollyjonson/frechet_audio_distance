@@ -6,7 +6,6 @@ from setuptools import find_packages, setup
 
 def read(*paths, **kwargs):
     """Read the contents of a text file safely."""
-    content = ""
     with io.open(
         os.path.join(os.path.dirname(__file__), *paths),
         encoding=kwargs.get("encoding", "utf8"),
