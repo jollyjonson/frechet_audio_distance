@@ -17,7 +17,9 @@ class VGGishTests(unittest.TestCase):
         actual_embeddings = VGGish().model(VGGISH_TEST_INPUT)
         self.assertTrue(
             np.allclose(
-                actual_embeddings, EXPECTED_EMBEDDING_FROM_TEST_INPUT, atol=1e-6
+                actual_embeddings,
+                EXPECTED_EMBEDDING_FROM_TEST_INPUT,
+                atol=1e-6,
             )
         )
 

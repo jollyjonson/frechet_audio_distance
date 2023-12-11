@@ -80,7 +80,9 @@ class VGGish(FADFeature):
     _window_length_secs = 0.025
     _hop_length_secs = 0.010
 
-    _window_length_samples = int(round(sample_rate_in_hz * _window_length_secs))
+    _window_length_samples = int(
+        round(sample_rate_in_hz * _window_length_secs)
+    )
     _hop_length_samples = int(round(sample_rate_in_hz * _hop_length_secs))
     _fft_length = 2 ** int(
         np.ceil(np.log(_window_length_samples) / np.log(2.0))
