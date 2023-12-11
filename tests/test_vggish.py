@@ -1,7 +1,6 @@
 import unittest
 
 import numpy as np
-import numpy.testing as npt
 import tensorflow as tf
 
 from frechet_audio_distance.vggish import VGGish
