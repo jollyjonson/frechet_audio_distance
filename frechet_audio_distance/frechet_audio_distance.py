@@ -261,35 +261,6 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
         )
 
     @staticmethod
-    def _update_statistics(
-        statistics: _Statistics,
-        data: tf.Tensor,
-        num_items_processed: Union[int, tf.Variable],
-    ):
-        """
-        Updates the means and covariances held by an instance of
-        `FrechetAudioDistance.Statistics.`
-        """
-        data = tf.cast(data, dtype=tf.float64)
-        batch_size = tf.cast(tf.shape(data)[0], dtype=tf.float64)
-
-        x_norm_old = data - statistics.mean
-        statistics.mean.assign_add(
-            tf.reduce_sum(x_norm_old, axis=0) / num_items_processed
-        )
-        x_norm_new = data - statistics.mean
-
-        statistics.covariance.assign(
-            statistics.covariance
-            * (num_items_processed - batch_size)
-            / num_items_processed
-        )
-        statistics.covariance.assign_add(
-            tf.matmul(tf.transpose(x_norm_old), x_norm_new)
-            / num_items_processed
-        )
-
-    @staticmethod
     def _stable_trace_sqrt_product(
         covariance_true: tf.Tensor, covariance_pred: tf.Tensor
     ) -> tf.Tensor:  # pragma: no cover
