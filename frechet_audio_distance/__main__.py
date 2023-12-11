@@ -6,7 +6,7 @@ from frechet_audio_distance.files_processor import FilesProcessor
 BLOCK_SIZE_IN_S = 10
 SAMPLERATE_IN_HZ = 16000
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     parser = argparse.ArgumentParser(
         description="Compute the FAD given a set of reference "
         "and estimate audio files."
