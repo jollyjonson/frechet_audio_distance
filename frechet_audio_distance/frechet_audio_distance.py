@@ -49,7 +49,7 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
             self.mean = tf.Variable(tf.zeros((dim,), dtype=tf.float64))
             self.num_items_processed = tf.Variable(0.0, dtype=tf.float64)
 
-        def update(self, data: tf.Tensor) -> None:
+        def update(self, data: tf.Tensor) -> None:  # pragma: no cover
             """
             Updates the means and covariances held by an instance of this class
             """
