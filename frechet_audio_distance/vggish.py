@@ -11,8 +11,7 @@ VGGISH_PUBLIC_MODEL_CHECKPOINT_URL: str = (
 
 
 class VGGish(FADFeature):
-
-    def __init__(self, step_size_in_s: float = .5):
+    def __init__(self, step_size_in_s: float = 0.5):
         self._step_size_in_samples = int(
             round(step_size_in_s * self.input_sample_rate_in_hz)
         )
@@ -81,11 +80,8 @@ class VGGish(FADFeature):
     _window_length_secs = 0.025
     _hop_length_secs = 0.010
 
-    _window_length_samples = int(round(sample_rate_in_hz
-                                       * _window_length_secs))
-    _hop_length_samples = int(
-        round(sample_rate_in_hz * _hop_length_secs)
-    )
+    _window_length_samples = int(round(sample_rate_in_hz * _window_length_secs))
+    _hop_length_samples = int(round(sample_rate_in_hz * _hop_length_secs))
     _fft_length = 2 ** int(
         np.ceil(np.log(_window_length_samples) / np.log(2.0))
     )
@@ -102,7 +98,8 @@ class VGGish(FADFeature):
 
     @staticmethod
     def _normalize_audio(
-            audio_batch: tf.Tensor) -> tf.Tensor:  # pragma: no cover
+        audio_batch: tf.Tensor,
+    ) -> tf.Tensor:  # pragma: no cover
         min_ratio_for_normalization = tf.convert_to_tensor(
             0.1, dtype=audio_batch.dtype
         )  # = 10**(max_db/-20) with max_db = 20
@@ -114,14 +111,14 @@ class VGGish(FADFeature):
 
     @staticmethod
     def _stabilized_log(
-            x: tf.Tensor, additive_offset: float, floor: float
+        x: tf.Tensor, additive_offset: float, floor: float
     ) -> tf.Tensor:  # pragma: no cover
         """TF version of mfcc_mel.StabilizedLog."""
         return tf.math.log(tf.math.maximum(x, floor) + additive_offset)
 
     def _extract_mel_features(
-            self,
-            audio_batch: tf.Tensor) -> tf.Tensor:  # pragma: no cover
+        self, audio_batch: tf.Tensor
+    ) -> tf.Tensor:  # pragma: no cover
         normalized_audio_batch = self._normalize_audio(audio_batch)
         framed_audio = tf.signal.frame(
             normalized_audio_batch,
@@ -137,8 +134,9 @@ class VGGish(FADFeature):
         )
         return tf.map_fn(self._log_mel_spectrogram, batched_framed_audio)
 
-    def _log_mel_spectrogram(self, audio: tf.Tensor
-                             ) -> tf.Tensor:  # pragma: no cover
+    def _log_mel_spectrogram(
+        self, audio: tf.Tensor
+    ) -> tf.Tensor:  # pragma: no cover
         spectrogram = tf.abs(
             tf.signal.stft(
                 tf.cast(audio, tf.dtypes.float32),
@@ -185,7 +183,7 @@ class VGGish(FADFeature):
 
     @staticmethod
     def _assign_weights_to_model(
-            weights: list[tf.Variable], keras_model: tf.keras.Model
+        weights: list[tf.Variable], keras_model: tf.keras.Model
     ) -> tf.keras.Model:
         for layer in keras_model.layers:
             for w in layer.trainable_weights:
@@ -207,8 +205,7 @@ class VGGish(FADFeature):
             shape=(VGGish.num_frames, VGGish.num_mel_bins)
         )
         x = tf.reshape(
-            input_layer, [-1, VGGish.num_frames,
-                          VGGish.num_mel_bins, 1]
+            input_layer, [-1, VGGish.num_frames, VGGish.num_mel_bins, 1]
         )
         x = tf.keras.layers.Conv2D(64, **conv_layer_kwargs)(x)
         x = tf.keras.layers.MaxPool2D(**pool_layer_kwargs)(x)
@@ -223,8 +220,6 @@ class VGGish(FADFeature):
         x = tf.keras.layers.Flatten()(x)
         x = tf.keras.layers.Dense(4096, activation="relu")(x)
         x = tf.keras.layers.Dense(4096, activation="relu")(x)
-        x = tf.keras.layers.Dense(
-            VGGish.embedding_size, activation=None
-        )(x)
+        x = tf.keras.layers.Dense(VGGish.embedding_size, activation=None)(x)
         embedding = tf.identity(x, name="embedding")
         return tf.keras.Model(inputs=[input_layer], outputs=[embedding])

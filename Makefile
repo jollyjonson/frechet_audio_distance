@@ -18,8 +18,8 @@ install:          ## Install the project in dev mode.
 .PHONY: fmt
 fmt:              ## Format code using black & isort.
 	$(ENV_PREFIX)isort frechet_audio_distance/
-	$(ENV_PREFIX)black -l 79 frechet_audio_distance/
-	$(ENV_PREFIX)black -l 79 tests/
+	$(ENV_PREFIX)black -l 80 frechet_audio_distance/
+	$(ENV_PREFIX)black -l 80 tests/
 
 .PHONY: lint
 lint:             ## Run pep8, black, mypy linters.
