@@ -8,8 +8,8 @@ try:
     from feature import FADFeature
     from vggish import VGGish
 except ModuleNotFoundError:
-    from .feature import FADFeature
     from .fad_statistics import Statistics
+    from .feature import FADFeature
     from .vggish import VGGish
 
 
@@ -79,25 +79,19 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
         **kwargs
     ) -> None:  # pragma: no cover
         if self.switch:
-            y_true, y_pred = map(
-                lambda x: tf.cast(x, tf.float32), [y_true, y_pred]
-            )
-            if self._sample_rate != self.internal_sample_rate_in_hz:
-                y_true, y_pred = map(
-                    self._resample_to_internal_sample_rate, [y_true, y_pred]
-                )
-            y_true, y_pred = map(
-                self._possibly_add_batch_dim_and_reduce_channel_dim,
+            for data, associated_statistics in zip(
                 [y_true, y_pred],
-            )
-            y_true_embedding, y_pred_embedding = map(
-                self._feature, [y_true, y_pred]
-            )
-            for data, statistics in zip(
-                [y_true_embedding, y_pred_embedding],
                 [self._true_statistics, self._pred_statistics],
             ):
-                statistics.update(data)
+                if data is not None:
+                    data = tf.cast(data, tf.float32)
+                    if self._sample_rate != self.internal_sample_rate_in_hz:
+                        data = self._resample_to_internal_sample_rate(data)
+                    data = self._possibly_add_batch_dim_and_reduce_channel_dim(
+                        data
+                    )
+                    data_embedding = self._feature(data)
+                    associated_statistics.update(data_embedding)
 
     def result(self) -> tf.Tensor:  # pragma: no cover
         return self._compute_distance()
