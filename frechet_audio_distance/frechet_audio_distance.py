@@ -5,7 +5,12 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_io as tfio
 
-from .vggish_params import VGGishParams
+try:
+    from feature import FADFeature
+    from vggish import VGGish
+except ModuleNotFoundError:
+    from .feature import FADFeature
+    from .vggish import VGGish
 
 
 class FrechetAudioDistance(tf.keras.metrics.Metric):
@@ -149,7 +154,7 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
         normalized_audio_batch = self._normalize_audio(audio_batch)
         framed_audio = tf.signal.frame(
             normalized_audio_batch,
-            VGGishParams.SAMPLE_RATE_IN_HZ,
+            VGGish.sample_rate_in_hz,
             self._step_size_in_samples,
         )
         batched_framed_audio = tf.reshape(
@@ -181,10 +186,10 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
 
     # spectrogram params as given by FAD paper
     _num_mel_bins = 64
-    _log_additive_offset = 0.001
+    _log_additive_offset = 1e-3
     _log_floor = 1e-12
     _window_length_secs = 0.025
-    _hop_length_secs = 0.010
+    _hop_length_secs = 1e-2
     _window_length_samples = int(
         round(internal_sample_rate_in_hz * _window_length_secs)
     )
@@ -200,8 +205,8 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
         num_mel_bins=_num_mel_bins,
         num_spectrogram_bins=_fft_length // 2 + 1,
         sample_rate=internal_sample_rate_in_hz,
-        lower_edge_hertz=VGGishParams.MEL_MIN_HZ,
-        upper_edge_hertz=VGGishParams.MEL_MAX_HZ,
+        lower_edge_hertz=VGGish.mel_min_hz,
+        upper_edge_hertz=VGGish.mel_max_hz,
         dtype=tf.dtypes.float32,
     )
 
@@ -358,12 +363,9 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
     def _load_vggish_weights(saved_model_path: str) -> List[tf.Variable]:
         weights = []
         loaded_obj = tf.saved_model.load(saved_model_path)
-        for weight_name_in_orig_model in VGGishParams.VAR_NAMES:
-            for (
-                weight_var
-            ) in (
-                loaded_obj._variables
-            ):  # only way I got this SOMEHOW to work at all... might break.
+        for weight_name_in_orig_model in VGGish.var_names:
+            # only way I got this SOMEHOW to work at all... might break.
+            for weight_var in loaded_obj._variables:
                 if weight_var.name == weight_name_in_orig_model:
                     weights.append(weight_var)
         return weights
@@ -389,11 +391,9 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
         pool_layer_kwargs = {"strides": (2, 2), "padding": "SAME"}
 
         input = tf.keras.layers.Input(
-            shape=(VGGishParams.NUM_FRAMES, VGGishParams.NUM_BANDS)
+            shape=(VGGish.num_frames, VGGish.num_mel_bins)
         )
-        x = tf.reshape(
-            input, [-1, VGGishParams.NUM_FRAMES, VGGishParams.NUM_BANDS, 1]
-        )
+        x = tf.reshape(input, [-1, VGGish.num_frames, VGGish.num_mel_bins, 1])
         x = tf.keras.layers.Conv2D(64, **conv_layer_kwargs)(x)
         x = tf.keras.layers.MaxPool2D(**pool_layer_kwargs)(x)
         x = tf.keras.layers.Conv2D(128, **conv_layer_kwargs)(x)
