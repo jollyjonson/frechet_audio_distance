@@ -54,7 +54,7 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
         sample_rate: float,
         downmix_to_mono: bool = False,
         name: Optional[str] = None,
-        feature: FADFeature = VGGish(),
+        feature: FADFeature = VGGish(step_size_in_s=0.5),
         **kwargs: Dict[Any, Any]
     ):
         super().__init__(
