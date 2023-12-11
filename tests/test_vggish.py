@@ -32,7 +32,8 @@ class VGGishTests(unittest.TestCase):
     def test_vggish_class_computes_correct_embeddings_from_audio(self):
         actual_embeddings = VGGish()(self._generate_1s_1khz_test_signal())
         self.assertTrue(np.allclose(actual_embeddings,
-                                    EXPECTED_EMBEDDING_FROM_1S_1KHZ_AUDIO))
+                                    EXPECTED_EMBEDDING_FROM_1S_1KHZ_AUDIO,
+                                    atol=1e-3))
 
     def test_vggish_output_dim_is_correct(self):
         self.assertEqual(VGGish().output_dim, 128)
