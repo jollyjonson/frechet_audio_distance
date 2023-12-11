@@ -3,14 +3,9 @@ from typing import Any, Dict, Optional
 import tensorflow as tf
 import tensorflow_io as tfio
 
-try:
-    from fad_statistics import Statistics
-    from feature import FADFeature
-    from vggish import VGGish
-except ModuleNotFoundError:
-    from .fad_statistics import Statistics
-    from .feature import FADFeature
-    from .vggish import VGGish
+from .fad_statistics import Statistics
+from .feature import FADFeature
+from .vggish import VGGish
 
 
 class FrechetAudioDistance(tf.keras.metrics.Metric):
@@ -124,7 +119,9 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
                 (tf.shape(audio)[0] * tf.shape(audio)[-1], tf.shape(audio)[1]),
             )
 
-    def _resample_to_internal_sample_rate(self, audio: tf.Tensor) -> tf.Tensor:
+    def _resample_to_internal_sample_rate(
+        self, audio: tf.Tensor
+    ) -> tf.Tensor:  # pragma: no cover
         return tf.cast(
             tfio.audio.resample(
                 tf.cast(audio, tf.float32),
