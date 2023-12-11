@@ -407,9 +407,7 @@ class FrechetAudioDistance(tf.keras.metrics.Metric):
         x = tf.keras.layers.Flatten()(x)
         x = tf.keras.layers.Dense(4096, activation="relu")(x)
         x = tf.keras.layers.Dense(4096, activation="relu")(x)
-        x = tf.keras.layers.Dense(
-            VGGishParams.EMBEDDING_SIZE, activation=None
-        )(x)
+        x = tf.keras.layers.Dense(VGGish.embedding_size, activation=None)(x)
         embedding = tf.identity(x, name="embedding")
         return tf.keras.Model(inputs=[input], outputs=[embedding])
 
