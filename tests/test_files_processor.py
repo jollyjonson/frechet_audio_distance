@@ -3,10 +3,11 @@ import shutil
 import unittest
 
 import numpy as np
+import tensorflow as tf
 from scipy.io import wavfile
 
-from frechet_audio_distance.files_processor import Path, FilesProcessor
 from frechet_audio_distance import FrechetAudioDistance
+from frechet_audio_distance.files_processor import Path, FilesProcessor
 
 
 class FilesProcessorTests(unittest.TestCase):
@@ -73,9 +74,17 @@ class FilesProcessorTests(unittest.TestCase):
     def test_processor_works_for_unequal_amount_of_files(self):
         sample_rate_in_hz = 16000
         distance_val = FilesProcessor(
-            self._reference_files, self._estimate_files[:-2], verbose=False
+            self._reference_files, self._estimate_files[:-2]
         )(FrechetAudioDistance(sample_rate_in_hz), block_size_in_s=3)
         self.assertTrue(np.isfinite(distance_val))
+
+    def test_processor_raises_for_non_stateful_metric(self):
+        sample_rate_in_hz = 16000
+        processor = FilesProcessor(self._reference_files, self._estimate_files)
+        self.assertRaises(
+            RuntimeError,
+            lambda: processor(tf.keras.metrics.MSE, block_size_in_s=3),
+        )
 
 
 if __name__ == "__main__":
