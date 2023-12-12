@@ -45,7 +45,7 @@ class FilesProcessor:
         ):
             for file_path in file_list:
                 if self.verbose:
-                    progress_bar.update()
+                    progress_bar.update(1)
                 audio = self.load_audio_and_readjust_dimensionality(
                     downmix_to_mono, file_path, samplerate_in_hz
                 )
