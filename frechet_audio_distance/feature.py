@@ -13,7 +13,7 @@ class FADFeature(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def output_dim(self):
+    def output_dim(self) -> int:
         """
         Returns the output dimensionality of the feature. E.g. when given
         audio data of dimensionality (batch_size x num_samples), the
