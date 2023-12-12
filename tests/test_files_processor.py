@@ -44,7 +44,6 @@ class FilesProcessorTests(unittest.TestCase):
                         path = os.path.join(
                             self._test_directory_path,
                             prefix
-                            + "_"
                             + str(num_channels)
                             + "_"
                             + str(sample_rate)
