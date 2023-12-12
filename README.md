@@ -9,10 +9,12 @@ The FAD was proposed by Kilgour et al. in [1] and is a non-reference i.e. blind 
 ## Installation
 Install this package straight from GitHub using
 ```bash
-$ python -m pip install -e 'frechet_audio_distance @ git+https://github.com/jollyjonson/frechet_audio_distance@v1.0.0'
+python -m pip install -e 'frechet_audio_distance @ git+https://github.com/jollyjonson/frechet_audio_distance@v1.0.0'
 ```
-Or clone the repository, navigate into the main directory containing the `setup.py` and run
+Or clone the repository, navigate into the main directory containing the `setup.py` and install the package in development mode. You can also chose to not install it in development mode by omitting the `-e` flag.
 ```bash
+git clone https://github.com/jollyjonson/frechet_audio_distance
+cd frechet_audio_distance
 pip install -e .
 ```
 
@@ -20,9 +22,7 @@ pip install -e .
 
 Usage from the command line is simple, just give it a set of reference and estimate files and the FAD will be computed for these
 ```bash
-$ python -m frechet_audio_distance 
--r reference_file1.wav reference_file2.wav 
--e estimate_file1.wav estimate_file2.wav
+python -m frechet_audio_distance -r reference_file1.wav reference_file2.wav -e estimate_file1.wav estimate_file2.wav
 ```
 Note that the file format must be supported by `librosa.core.audio.load` for this to work.
 
@@ -46,7 +46,7 @@ Computing the FAD during training will most likely hinder the training performan
 ## Contributing
 Contributions are welcome!
 If you are looking for something specifically, IMO finding new embedding models that are maybe closer related to human
-perception as the one given in the original paper might be a really worthwhile contribution.
+perception as the one given in the original paper might be a worthwhile contribution.
 If you wish to contribute, please:
 
 1. Fork the repository.
