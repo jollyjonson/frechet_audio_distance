@@ -24,7 +24,7 @@ def read_requirements(path):
 
 setup(
     name="frechet_audio_distance",
-    version='v1.0.2',
+    version='v1.0.3',
     description="Implementation of the Frechet Audio Distance as Keras Metric",
     url="https://github.com/jollyjonson/frechet_audio_distance/",
     long_description=read("README.md"),

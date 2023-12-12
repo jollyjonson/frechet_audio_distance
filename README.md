@@ -9,7 +9,7 @@ The FAD was proposed by Kilgour et al. in [1] and is a non-reference i.e. blind 
 ## Installation
 Install this package straight from GitHub using
 ```bash
-python -m pip install 'frechet_audio_distance @ git+https://github.com/jollyjonson/frechet_audio_distance@v1.0.0'
+python -m pip install 'frechet_audio_distance @ git+https://github.com/jollyjonson/frechet_audio_distance@v1.0.3'
 ```
 Or clone the repository, navigate into the main directory containing the `setup.py` and install the package in development mode. You can also chose to not install it in development mode by omitting the `-e` flag.
 ```bash
