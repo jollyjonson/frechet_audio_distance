@@ -9,7 +9,8 @@ class Statistics:
 
     def update(self, data: tf.Tensor) -> None:  # pragma: no cover
         """
-        Updates the means and covariances held by an instance of this class
+        Updates the means and covariances held by an instance of this class.
+        the parameter `data` must be of shape (num_elements x *(data.shape)).
         """
         data = tf.cast(data, dtype=tf.float64)
         num_items_this_update = tf.cast(tf.shape(data)[0], dtype=tf.float64)
